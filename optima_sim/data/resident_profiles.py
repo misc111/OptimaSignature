@@ -151,10 +151,16 @@ class ResidentFactory:
         return Location(LocationType.AMENITY, amenity.name, floor=amenity.floor, x=amenity.x)
 
     def named_amenity(self, name: str) -> Amenity:
-        try:
+        if self.building.amenities and name in self.building.amenities:
             return self.building.amenities[name]
-        except KeyError as exc:
-            raise ValueError(f"Amenity '{name}' not defined in building config") from exc
+        fallback = Amenity(
+            name=name,
+            floor=0,
+            capacity=1,
+            category="unit",
+            metadata={"fallback": "true"},
+        )
+        return fallback
 
     def _appearance_for(self, persona: str) -> Tuple[str, str, str]:
         palette = APPEARANCE_PALETTES.get(persona)
