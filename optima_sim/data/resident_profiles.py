@@ -77,6 +77,7 @@ class ResidentFactory:
     def __init__(self, building: Building, seed: int | None = None) -> None:
         self.building = building
         self.rng = random.Random(seed)
+        self._amenity_cache: Dict[str, List[Amenity]] = {}
 
     def populate_building(self, occupancy: float = 0.93) -> List[Resident]:
         residents: List[Resident] = []
@@ -114,14 +115,29 @@ class ResidentFactory:
         return Location(LocationType.UNIT, unit.unit_number, floor=unit.floor, x=unit.position)
 
     def _amenities_by_category(self, category: str) -> List[Amenity]:
-        return [a for a in self.building.amenities.values() if a.category == category]
+        if not self.building.amenities:
+            return []
+        if category not in self._amenity_cache:
+            self._amenity_cache[category] = [
+                amenity
+                for amenity in self.building.amenities.values()
+                if amenity.category == category
+            ]
+        return self._amenity_cache[category]
 
     def choose_amenity(self, categories: Iterable[str]) -> Amenity:
         choices: List[Amenity] = []
         for category in categories:
             choices.extend(self._amenities_by_category(category))
         if not choices:
-            raise ValueError("No amenities available for provided categories")
+            dummy_location = Location(LocationType.UNIT, "Home", floor=0, x=0.5)
+            return Amenity(
+                name="In-Unit",
+                floor=0,
+                capacity=1,
+                category="unit",
+                metadata={"fallback": "true"},
+            )
         return self.rng.choice(choices)
 
     def _work_location(self, unit: Unit) -> Location:
