@@ -8,7 +8,8 @@ A simulation-driven "digital twin" of the Optima Signature residential tower in 
 - Fully simulated elevator queues, boarding, and rides connecting units, amenities, and the outside world.
 - Rich appearance system with persona-driven hair/outfit palettes to spot residents at a glance.
 - Minute-level activity tracking with transitions logged to an event feed plus mood drift, amenity occupancy, and commuter flows.
-- Flask API streaming the latest building snapshot alongside a canvas-driven dashboard showcasing animated residents, sun/moon cycle, and real-time speed controls.
+- Flask API streaming the latest building snapshot alongside a sprite-driven dashboard showcasing animated residents, sun/moon cycle, and real-time speed controls.
+- Art-deco inspired sprite manifest (`frontend/app.manifest.json`) that powers room backdrops, props, and persona-specific animations with graceful fallbacks for missing art.
 
 ## Getting Started
 
@@ -48,6 +49,10 @@ Install dev dependencies and run the movement tests with `pytest`:
 pip install -r requirements.txt
 pytest
 ```
+
+### Art Assets
+
+The dashboard reads `frontend/app.manifest.json` to discover sprites. Populate the referenced `assets/sprites/` folders with PNG artwork to replace the procedural placeholders. Missing files fall back to stylised stubs so you can iterate on the manifest before final art lands.
 
 ## Project Structure
 

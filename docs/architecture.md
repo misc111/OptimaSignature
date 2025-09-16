@@ -22,8 +22,9 @@ The project models Optima Signature as a living building populated by AI-driven 
 
 ### Frontend (`frontend/`)
 - `index.html`: Canvas-driven digital twin experience with HUD overlays and time controls.
-- `app.js`: Polls the `/state` endpoint, interpolates resident movement, renders elevators, sun/moon cycle, and handles speed adjustments.
+- `app.js`: Polls the `/state` endpoint, drives sprite-based rendering, animates residents, and handles speed adjustments.
 - `styles.css`: Neon-inspired styling for the dashboard and overlays.
+- `app.manifest.json`: Sprite manifest describing art assets, room backgrounds, props, and persona animation sheets.
 
 ### Testing
 - `tests/test_elevator_movement.py`: Behavioural specs that validate elevator boarding, vertical confinement, arrival states, and smooth motion profiles.

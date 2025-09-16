@@ -62,6 +62,9 @@ class Unit:
     square_feet: int
     rent: int
     position: float
+    width: float
+    depth: float
+    room_type: str
     residents: List["Resident"] = field(default_factory=list)
 
     def add_resident(self, resident: "Resident") -> None:

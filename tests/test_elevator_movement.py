@@ -19,7 +19,17 @@ from optima_sim.core.simulation import ELEVATOR_X, Simulation
 
 def build_test_simulation() -> tuple[Simulation, Resident]:
     floor_l = Floor(floor_number=0, label="L", units=[])
-    unit = Unit(unit_number="0501", floor=5, bedrooms=1, square_feet=900, rent=2800, position=0.22)
+    unit = Unit(
+        unit_number="0501",
+        floor=5,
+        bedrooms=1,
+        square_feet=900,
+        rent=2800,
+        position=0.22,
+        width=0.18,
+        depth=0.24,
+        room_type="unit_1br",
+    )
     floor_5 = Floor(floor_number=5, label="05", units=[unit])
     building = Building(
         name="Test Tower",

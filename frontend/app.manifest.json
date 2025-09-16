@@ -1,0 +1,170 @@
+{
+  "theme": "art_deco_nocturne",
+  "version": 1,
+  "building": {
+    "facade": "assets/sprites/building/tower_facade.png",
+    "windows_day": "assets/sprites/building/windows_day.png",
+    "windows_night": "assets/sprites/building/windows_night.png",
+    "elevator_shaft": "assets/sprites/building/elevator_shaft.png",
+    "elevator_car": {
+      "idle": "assets/sprites/building/elevator_car_idle.png",
+      "door_open": "assets/sprites/building/elevator_car_open.png"
+    }
+  },
+  "rooms": {
+    "unit_1br": {
+      "background": "assets/sprites/rooms/unit_1br_bg.png",
+      "props": [
+        "assets/sprites/props/sofa_green.png",
+        "assets/sprites/props/bed_pompeian.png",
+        "assets/sprites/props/lamp_brass.png",
+        "assets/sprites/props/plant_palm.png"
+      ]
+    },
+    "unit_2br": {
+      "background": "assets/sprites/rooms/unit_2br_bg.png",
+      "props": [
+        "assets/sprites/props/sofa_blue.png",
+        "assets/sprites/props/dining_table.png",
+        "assets/sprites/props/bookshelf.png",
+        "assets/sprites/props/lamp_brass.png"
+      ]
+    },
+    "unit_3br": {
+      "background": "assets/sprites/rooms/unit_3br_bg.png",
+      "props": [
+        "assets/sprites/props/sofa_rust.png",
+        "assets/sprites/props/bed_king.png",
+        "assets/sprites/props/piano.png",
+        "assets/sprites/props/plant_fig.png"
+      ]
+    },
+    "penthouse": {
+      "background": "assets/sprites/rooms/penthouse_bg.png",
+      "props": [
+        "assets/sprites/props/grand_piano.png",
+        "assets/sprites/props/sculpture_artdeco.png",
+        "assets/sprites/props/chandelier.png",
+        "assets/sprites/props/lounge_set.png"
+      ]
+    },
+    "fitness": {
+      "background": "assets/sprites/rooms/fitness_bg.png",
+      "props": [
+        "assets/sprites/props/treadmill.png",
+        "assets/sprites/props/dumbbell_rack.png",
+        "assets/sprites/props/yoga_mats.png"
+      ]
+    },
+    "pool": {
+      "background": "assets/sprites/rooms/pool_bg.png",
+      "props": [
+        "assets/sprites/props/lounger.png",
+        "assets/sprites/props/potted_fern.png"
+      ]
+    },
+    "lounge": {
+      "background": "assets/sprites/rooms/lounge_bg.png",
+      "props": [
+        "assets/sprites/props/bar_counter.png",
+        "assets/sprites/props/armchair_pair.png",
+        "assets/sprites/props/art_panel.png"
+      ]
+    },
+    "workspace": {
+      "background": "assets/sprites/rooms/workspace_bg.png",
+      "props": [
+        "assets/sprites/props/desk_cluster.png",
+        "assets/sprites/props/bookshelf.png",
+        "assets/sprites/props/coffee_station.png"
+      ]
+    },
+    "spa": {
+      "background": "assets/sprites/rooms/spa_bg.png",
+      "props": [
+        "assets/sprites/props/sauna_bench.png",
+        "assets/sprites/props/spa_table.png",
+        "assets/sprites/props/aroma_stand.png"
+      ]
+    },
+    "family": {
+      "background": "assets/sprites/rooms/playroom_bg.png",
+      "props": [
+        "assets/sprites/props/play_table.png",
+        "assets/sprites/props/shelf_toys.png",
+        "assets/sprites/props/beanbag.png"
+      ]
+    },
+    "dining": {
+      "background": "assets/sprites/rooms/cafe_bg.png",
+      "props": [
+        "assets/sprites/props/cafe_booth.png",
+        "assets/sprites/props/espresso_machine.png",
+        "assets/sprites/props/plant_hanging.png"
+      ]
+    }
+  },
+  "residents": {
+    "urban_professional": {
+      "idle": "assets/sprites/residents/urban_idle.png",
+      "walk": [
+        "assets/sprites/residents/urban_walk_1.png",
+        "assets/sprites/residents/urban_walk_2.png",
+        "assets/sprites/residents/urban_walk_3.png",
+        "assets/sprites/residents/urban_walk_4.png"
+      ],
+      "work": "assets/sprites/residents/urban_work.png",
+      "amenity_fitness": "assets/sprites/residents/urban_fitness.png",
+      "amenity_lounge": "assets/sprites/residents/urban_lounge.png"
+    },
+    "remote_worker": {
+      "idle": "assets/sprites/residents/remote_idle.png",
+      "walk": [
+        "assets/sprites/residents/remote_walk_1.png",
+        "assets/sprites/residents/remote_walk_2.png",
+        "assets/sprites/residents/remote_walk_3.png",
+        "assets/sprites/residents/remote_walk_4.png"
+      ],
+      "work": "assets/sprites/residents/remote_work.png",
+      "amenity_workspace": "assets/sprites/residents/remote_workspace.png",
+      "amenity_fitness": "assets/sprites/residents/remote_fitness.png"
+    },
+    "family_parent": {
+      "idle": "assets/sprites/residents/family_idle.png",
+      "walk": [
+        "assets/sprites/residents/family_walk_1.png",
+        "assets/sprites/residents/family_walk_2.png"
+      ],
+      "home": "assets/sprites/residents/family_home.png",
+      "amenity_family": "assets/sprites/residents/family_play.png"
+    },
+    "grad_student": {
+      "idle": "assets/sprites/residents/grad_idle.png",
+      "walk": [
+        "assets/sprites/residents/grad_walk_1.png",
+        "assets/sprites/residents/grad_walk_2.png",
+        "assets/sprites/residents/grad_walk_3.png"
+      ],
+      "work": "assets/sprites/residents/grad_work.png",
+      "amenity_workspace": "assets/sprites/residents/grad_workspace.png"
+    },
+    "fitness_enthusiast": {
+      "idle": "assets/sprites/residents/fit_idle.png",
+      "walk": [
+        "assets/sprites/residents/fit_walk_1.png",
+        "assets/sprites/residents/fit_walk_2.png",
+        "assets/sprites/residents/fit_walk_3.png",
+        "assets/sprites/residents/fit_walk_4.png"
+      ],
+      "amenity_fitness": "assets/sprites/residents/fit_training.png",
+      "amenity_pool": "assets/sprites/residents/fit_pool.png"
+    }
+  },
+  "props": {
+    "default_layering": ["background", "props", "residents", "foreground"],
+    "lighting_overlays": {
+      "room_glow": "assets/sprites/props/room_glow.png",
+      "window_glow": "assets/sprites/props/window_glow.png"
+    }
+  }
+}

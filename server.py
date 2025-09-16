@@ -19,6 +19,7 @@ current_speed = "normal"
 
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
+ASSET_DIR = Path(__file__).parent / "assets"
 
 building = load_building()
 factory = ResidentFactory(building, seed=1337)
@@ -55,7 +56,13 @@ def index() -> object:
 
 @app.route("/<path:path>")
 def assets(path: str) -> object:
-    return send_from_directory(FRONTEND_DIR, path)
+    frontend_candidate = FRONTEND_DIR / path
+    if frontend_candidate.exists():
+        return send_from_directory(FRONTEND_DIR, path)
+    asset_candidate = ASSET_DIR / path
+    if asset_candidate.exists():
+        return send_from_directory(ASSET_DIR, path)
+    return ("Not found", 404)
 
 
 @app.post("/speed")
