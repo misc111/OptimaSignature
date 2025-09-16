@@ -62,7 +62,57 @@ def _create_units_for_floor(floor_number: int) -> List[Unit]:
 
 
 def _amenities() -> Dict[str, Amenity]:
-    return {}
+    amenity_list = [
+        Amenity(
+            name="Fitness Center",
+            floor=1,
+            capacity=20,
+            category="fitness",
+            x=0.2,
+            metadata={"room_type": "unit_standard"},
+        ),
+        Amenity(
+            name="Rooftop Pool",
+            floor=10,
+            capacity=15,
+            category="pool",
+            x=0.8,
+            metadata={"room_type": "unit_standard"},
+        ),
+        Amenity(
+            name="Resident Lounge",
+            floor=1,
+            capacity=25,
+            category="lounge",
+            x=0.8,
+            metadata={"room_type": "unit_standard"},
+        ),
+        Amenity(
+            name="Coworking Space",
+            floor=2,
+            capacity=18,
+            category="workspace",
+            x=0.2,
+            metadata={"room_type": "unit_standard"},
+        ),
+        Amenity(
+            name="Spa & Sauna",
+            floor=2,
+            capacity=8,
+            category="spa",
+            x=0.8,
+            metadata={"room_type": "unit_standard"},
+        ),
+        Amenity(
+            name="Playroom",
+            floor=3,
+            capacity=10,
+            category="family",
+            x=0.2,
+            metadata={"room_type": "unit_standard"},
+        ),
+    ]
+    return {amenity.name: amenity for amenity in amenity_list}
 
 
 def load_building() -> Building:
