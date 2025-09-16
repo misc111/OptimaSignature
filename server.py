@@ -56,10 +56,11 @@ def index() -> object:
 
 @app.route("/<path:path>")
 def assets(path: str) -> object:
-    if path in {"styles.css", "app.js", "app.manifest.json"}:
-        return send_from_directory(FRONTEND_DIR, path)
     if path.startswith("assets/"):
         return send_from_directory(Path(__file__).parent, path)
+    frontend_candidate = FRONTEND_DIR / path
+    if frontend_candidate.exists():
+        return send_from_directory(FRONTEND_DIR, path)
     return ("Not found", 404)
 
 
