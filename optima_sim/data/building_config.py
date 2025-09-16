@@ -66,22 +66,18 @@ def _amenities() -> Dict[str, Amenity]:
 
 
 def load_building() -> Building:
-    floors: List[Floor] = []
-    for index, floor_number in enumerate(range(1, 11)):
+    floors: List[Floor] = [Floor(floor_number=0, label="L", units=[])]
+
+    for floor_number in range(1, 11):
         label = f"{floor_number:02d}"
         units = _create_units_for_floor(floor_number)
-        floor = Floor(floor_number=floor_number, label=label, units=units)
-        floors.append(floor)
+        floors.append(Floor(floor_number=floor_number, label=label, units=units))
 
     amenities = _amenities()
-    for amenity in amenities.values():
-        floor = next((f for f in floors if f.floor_number == amenity.floor), None)
-        if floor:
-            floor.amenities.append(amenity)
 
     return Building(
-        name="Optima Signature",
-        address="220 E Illinois St, Chicago, IL 60611",
+        name="Simplified Tower",
+        address="123 Main St, Chicago, IL",
         floors=floors,
         amenities=amenities,
     )
