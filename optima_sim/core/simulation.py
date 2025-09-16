@@ -539,17 +539,7 @@ class Simulation:
                         }
                         for unit in floor.units
                     ],
-                    "amenities": [
-                        {
-                            "name": amenity.name,
-                            "x": amenity.x,
-                            "category": amenity.category,
-                            "width": float(amenity.metadata.get("width", 0.3)),
-                            "depth": float(amenity.metadata.get("depth", 0.3)),
-                            "room_type": amenity.metadata.get("room_type", amenity.category),
-                        }
-                        for amenity in floor.amenities
-                    ],
+                    "amenities": [],
                 }
             )
         return outline

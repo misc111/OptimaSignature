@@ -81,22 +81,11 @@ class ResidentFactory:
     def populate_building(self, occupancy: float = 0.93) -> List[Resident]:
         residents: List[Resident] = []
         for unit in self.building.all_units():
-            if self.rng.random() > occupancy:
-                continue
-            target_residents = self._target_residents(unit)
-            for _ in range(target_residents):
-                persona = self.rng.choice(PERSONA_PROFILES)
-                resident = self._create_resident(unit, persona)
-                unit.add_resident(resident)
-                residents.append(resident)
+            persona = self.rng.choice(PERSONA_PROFILES)
+            resident = self._create_resident(unit, persona)
+            unit.add_resident(resident)
+            residents.append(resident)
         return residents
-
-    def _target_residents(self, unit: Unit) -> int:
-        if unit.bedrooms == 1:
-            return 1 if self.rng.random() < 0.85 else 2
-        if unit.bedrooms == 2:
-            return 2 if self.rng.random() < 0.7 else 3
-        return 3 if self.rng.random() < 0.6 else 2
 
     def _create_resident(self, unit: Unit, persona: PersonaProfile) -> Resident:
         name = f"{self.rng.choice(FirstNames)} {self.rng.choice(LastNames)}"

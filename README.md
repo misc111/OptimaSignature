@@ -3,7 +3,7 @@
 A simulation-driven "digital twin" of the Optima Signature residential tower in downtown Chicago. The project procedurally generates residents, gives them realistic schedules based on lifestyle personas, advances time in five-minute ticks, and exposes the evolving state through both a CLI driver and a lightweight web dashboard.
 
 ## Features
-- Tower stack from floor L through 52 with configured units, penthouse, gym, lounges, spa, cafe, and more.
+- Ten-floor tower with three identical apartments per floor for streamlined prototyping.
 - Resident personas (urban professionals, remote workers, families, grad students, fitness fanatics) with probabilistic daily routines.
 - Fully simulated elevator queues, boarding, and rides connecting units, amenities, and the outside world.
 - Rich appearance system with persona-driven hair/outfit palettes to spot residents at a glance.

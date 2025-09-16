@@ -10,7 +10,7 @@ The project models Optima Signature as a living building populated by AI-driven 
 ## High-Level Components
 
 ### Core Simulation Package (`optima_sim`)
-- `core/entities.py`: Data models for the building, floors, units, amenities, and residents' live state.
+- `core/entities.py`: Data models for the building, floors, units, and residents' live state.
 - `core/schedule.py`: Schedule templates and generators that synthesize minute-by-minute plans for residents.
 - `core/simulation.py`: Simulation engine that advances time, drives elevator logistics, animates resident movement targets, logs notable events, and aggregates statistics.
 - `data/building_config.py`: Authoritative description of Optima Signature's floors, unit mix, amenity locations, and service capacities.
@@ -24,7 +24,7 @@ The project models Optima Signature as a living building populated by AI-driven 
 - `index.html`: Canvas-driven digital twin experience with HUD overlays and time controls.
 - `app.js`: Polls the `/state` endpoint, drives sprite-based rendering, animates residents, and handles speed adjustments.
 - `styles.css`: Neon-inspired styling for the dashboard and overlays.
-- `app.manifest.json`: Sprite manifest describing art assets, room backgrounds, props, and persona animation sheets.
+- `app.manifest.json`: Sprite manifest describing art assets for the standardized apartment layout and persona animation sheets.
 
 ### Testing
 - `tests/test_elevator_movement.py`: Behavioural specs that validate elevator boarding, vertical confinement, arrival states, and smooth motion profiles.
