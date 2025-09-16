@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Optima Signature // Living Tower</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <canvas id="twinCanvas" aria-label="Optima Signature digital twin"></canvas>
+      <section class="hud" aria-live="polite">
+        <div class="top-bar">
+          <div class="time-block">
+            <span class="label">Simulation Time</span>
+            <div class="clock" id="clock">--:--</div>
+            <div class="daylight" id="daylight">Awaiting sunrise</div>
+          </div>
+          <div class="speed-controls" role="group" aria-label="Simulation speed">
+            <button class="speed" data-speed="slow">Slow</button>
+            <button class="speed active" data-speed="normal">Cruise</button>
+            <button class="speed" data-speed="fast">Hyper</button>
+          </div>
+        </div>
+        <div class="panels">
+          <article class="panel stats">
+            <h2>Building Pulse</h2>
+            <ul id="activityStats"></ul>
+          </article>
+          <article class="panel amenities">
+            <h2>Amenity Heat</h2>
+            <ul id="amenityStats"></ul>
+          </article>
+          <article class="panel residents">
+            <h2>Residents in Focus</h2>
+            <ul id="residentSpotlight"></ul>
+          </article>
+          <article class="panel events">
+            <h2>Latest Moments</h2>
+            <ul id="eventFeed"></ul>
+          </article>
+        </div>
+      </section>
+    </div>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
