@@ -5,6 +5,8 @@ const UPDATE_INTERVAL = 1200;
 const ELEVATOR_X = 0.5;
 const WALK_FRAME_MS = 160;
 const IDLE_FRAME_MS = 720;
+const LAYER_ORDER = { background: 0, mid: 1, foreground: 2 };
+const DEFAULT_ACTIVITY_ANCHOR = { x: 0.5, y: 0.92 };
 
 const canvas = document.getElementById("twinCanvas");
 const ctx = canvas.getContext("2d");
@@ -145,13 +147,43 @@ class SpriteLibrary {
 
   getRoomBackground(roomType) {
     const def = this.getRoomDefinition(roomType);
-    return def ? this.getImage(def.background) : this.createPlaceholder(`room-${roomType}`);
+    if (!def) return this.createPlaceholder(`room-${roomType}`);
+    const background =
+      typeof def.background === "string" ? def.background : def.background?.path;
+    return background ? this.getImage(background) : this.createPlaceholder(`room-${roomType}`);
   }
 
   getRoomProps(roomType) {
     const def = this.getRoomDefinition(roomType);
     if (!def || !def.props) return [];
-    return def.props.map((path) => this.getImage(path));
+    return def.props.map((entry) => {
+      if (typeof entry === "string") {
+        return {
+          sprite: this.getImage(entry),
+          layer: "mid",
+          anchor: { x: 0.5, y: 0.9 },
+          size: 0.4,
+        };
+      }
+      const spritePath = entry.path || entry.sprite || entry.image;
+      return {
+        sprite: this.getImage(spritePath),
+        layer: entry.layer || "mid",
+        anchor: entry.anchor || { x: 0.5, y: 0.9 },
+        size: entry.size ?? 0.4,
+        flip: entry.flip || false,
+      };
+    });
+  }
+
+  getRoomActivityPoints(roomType) {
+    const def = this.getRoomDefinition(roomType);
+    return def?.activity_points || {};
+  }
+
+  getRoomCharacterScale(roomType) {
+    const def = this.getRoomDefinition(roomType);
+    return def?.character_scale ?? 0.7;
   }
 
   getLightingSprite(kind) {
@@ -190,6 +222,14 @@ function seededRandom(seed) {
     state = (state * 1664525 + 1013904223) % 2 ** 32;
     return state / 2 ** 32;
   };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function layerRank(layer) {
+  return LAYER_ORDER[layer] ?? 1;
 }
 
 async function loadSprites() {
@@ -396,6 +436,62 @@ function computeRoomGeometry(layout) {
   return rooms;
 }
 
+function groupResidentsByLocation(rooms) {
+  const roomSet = new Set(rooms.map((room) => room.label));
+  const roomResidents = new Map();
+  const elevatorResidents = [];
+  const waitingResidents = [];
+  const outsideResidents = [];
+  const hallwayResidents = [];
+
+  currentState.residents.forEach((resident) => {
+    if (roomSet.has(resident.location)) {
+      const list = roomResidents.get(resident.location) || [];
+      list.push(resident);
+      roomResidents.set(resident.location, list);
+      return;
+    }
+    if (resident.status === "in_elevator") {
+      elevatorResidents.push(resident);
+      return;
+    }
+    if (resident.status === "waiting_elevator") {
+      waitingResidents.push(resident);
+      return;
+    }
+    if (resident.location_type === "outside") {
+      outsideResidents.push(resident);
+      return;
+    }
+    hallwayResidents.push(resident);
+  });
+
+  return {
+    roomResidents,
+    elevatorResidents,
+    waitingResidents,
+    outsideResidents,
+    hallwayResidents,
+  };
+}
+
+function computeLightingTargets(roomResidents) {
+  const lit = new Set();
+  roomResidents.forEach((residents, label) => {
+    if (
+      residents.some(
+        (resident) =>
+          resident.status === "in_event" &&
+          resident.activity !== "sleep" &&
+          resident.activity !== "at_home"
+      )
+    ) {
+      lit.add(label);
+    }
+  });
+  return lit;
+}
+
 function drawSky(sunlight, width, height) {
   const gradient = ctx.createLinearGradient(0, 0, 0, height);
   if (sunlight.is_day) {
@@ -448,29 +544,203 @@ function drawTower(layout) {
   });
 }
 
-function drawRooms(layout, rooms, occupancy) {
+function drawRoomOutlines(rooms) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(8, 12, 22, 0.38)";
+  ctx.lineWidth = 1.5;
+  rooms.forEach((room) => {
+    ctx.strokeRect(room.x + 0.5, room.y + 0.5, room.width - 1, room.height - 1);
+  });
+  ctx.restore();
+}
+
+function drawRooms(layout, rooms, roomResidentsMap) {
   rooms.forEach((room) => {
     const background = spriteLibrary.getRoomBackground(room.type);
     ctx.drawImage(background, room.x, room.y, room.width, room.height);
 
-    const rng = seededRandom(room.label);
-    const props = spriteLibrary.getRoomProps(room.type);
-    props.forEach((propSprite, index) => {
-      const scaleTarget = room.width * 0.35;
-      const scale = scaleTarget / propSprite.width;
-      const width = propSprite.width * scale;
-      const height = propSprite.height * scale;
-      const x = room.x + room.width * (0.15 + rng() * 0.7) - width / 2;
-      const y = room.y + room.height - height - room.height * (0.05 + rng() * 0.08);
-      ctx.drawImage(propSprite, x, y, width, height);
-    });
+    const props = spriteLibrary
+      .getRoomProps(room.type)
+      .slice()
+      .sort((a, b) => layerRank(a.layer) - layerRank(b.layer));
 
-    if (occupancy.has(room.label) && !currentState.sunlight.is_day) {
-      const glow = spriteLibrary.getLightingSprite("room_glow");
-      ctx.globalAlpha = 0.6;
-      ctx.drawImage(glow, room.x, room.y, room.width, room.height);
-      ctx.globalAlpha = 1;
+    const backgroundProps = props.filter((prop) => prop.layer !== "foreground");
+    const foregroundProps = props.filter((prop) => prop.layer === "foreground");
+
+    backgroundProps.forEach((prop) => drawRoomProp(room, prop));
+
+    const residents = roomResidentsMap.get(room.label) || [];
+    renderResidentsInRoom(room, residents);
+
+    foregroundProps.forEach((prop) => drawRoomProp(room, prop));
+  });
+}
+
+function drawRoomProp(room, prop) {
+  const anchor = prop.anchor || { x: 0.5, y: 0.9 };
+  const baseWidth = room.width * (prop.size ?? 0.4);
+  const aspect = prop.sprite.height > 0 ? prop.sprite.height / prop.sprite.width : 1;
+  const width = baseWidth;
+  const height = width * aspect;
+  const x = room.x + room.width * anchor.x - width / 2;
+  const y = room.y + room.height * anchor.y - height;
+
+  ctx.save();
+  if (prop.flip) {
+    ctx.translate(x + width / 2, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(prop.sprite, -width / 2, y, width, height);
+  } else {
+    ctx.drawImage(prop.sprite, x, y, width, height);
+  }
+  ctx.restore();
+}
+
+function normalizeActivityPoints(points) {
+  const normalized = {};
+  if (!points) {
+    return normalized;
+  }
+  Object.entries(points).forEach(([key, value]) => {
+    normalized[key.toLowerCase()] = value;
+  });
+  return normalized;
+}
+
+function resolveActivityAnchor(points, resident, room, index, total) {
+  const normalized = normalizeActivityPoints(points);
+  const candidates = [];
+  if (resident.activity) {
+    candidates.push(resident.activity);
+    candidates.push(`activity_${resident.activity}`);
+  }
+  if (resident.activity === "amenity" && room.type) {
+    candidates.push(`amenity_${room.type}`);
+  }
+  if (room.type) {
+    candidates.push(room.type);
+  }
+  if (room.category) {
+    candidates.push(room.category);
+  }
+  candidates.push("default");
+
+  let anchor = null;
+  for (const key of candidates) {
+    const match = normalized[key.toLowerCase()];
+    if (match) {
+      anchor = match;
+      break;
     }
+  }
+  if (!anchor) {
+    anchor = DEFAULT_ACTIVITY_ANCHOR;
+  }
+
+  const baseX = anchor.x ?? DEFAULT_ACTIVITY_ANCHOR.x;
+  const baseY = anchor.y ?? DEFAULT_ACTIVITY_ANCHOR.y;
+  if (total <= 1) {
+    return { x: baseX, y: baseY };
+  }
+  const span = 0.12;
+  const offset = (index - (total - 1) / 2) * span;
+  return {
+    x: clamp(baseX + offset, 0.2, 0.8),
+    y: baseY,
+  };
+}
+
+function renderResidentsInRoom(room, residents) {
+  if (!residents.length) return;
+  const activityPoints = spriteLibrary.getRoomActivityPoints(room.type);
+  const characterScale = spriteLibrary.getRoomCharacterScale(room.type);
+
+  residents.forEach((resident, index) => {
+    const sprite = chooseResidentSprite(resident, roomLookup.get(resident.location));
+    if (!sprite) return;
+    const anchor = resolveActivityAnchor(activityPoints, resident, room, index, residents.length);
+    const baseX = room.x + room.width * anchor.x;
+    const baseY = room.y + room.height * anchor.y;
+    const scale = (room.height * characterScale) / sprite.height;
+    const width = sprite.width * scale;
+    const height = sprite.height * scale;
+    ctx.drawImage(sprite, baseX - width / 2, baseY - height, width, height);
+  });
+}
+
+function drawElevatorResidents(layout, residents) {
+  if (!residents.length) return;
+  const { baseY, floorHeight, buildingWidth, offsetX } = layout;
+  const spread = floorHeight * 0.12;
+  residents.forEach((resident, index) => {
+    const sprite = chooseResidentSprite(resident, roomLookup.get(resident.location));
+    if (!sprite) return;
+    const scale = (floorHeight * 0.7) / sprite.height;
+    const width = sprite.width * scale;
+    const height = sprite.height * scale;
+    const baseXPixel =
+      offsetX +
+      buildingWidth * ELEVATOR_X +
+      (index - (residents.length - 1) / 2) * spread;
+    const baseYPixel =
+      baseY - resident.vertical_position * floorHeight - floorHeight * 0.1;
+    ctx.drawImage(sprite, baseXPixel - width / 2, baseYPixel - height, width, height);
+  });
+}
+
+function drawWaitingResidents(layout, residents) {
+  if (!residents.length) return;
+  const { baseY, floorHeight, buildingWidth, offsetX } = layout;
+  const spread = floorHeight * 0.14;
+  residents.forEach((resident, index) => {
+    const sprite = chooseResidentSprite(resident, roomLookup.get(resident.location));
+    if (!sprite) return;
+    const scale = (floorHeight * 0.65) / sprite.height;
+    const width = sprite.width * scale;
+    const height = sprite.height * scale;
+    const baseXPixel =
+      offsetX +
+      buildingWidth * ELEVATOR_X +
+      (index - (residents.length - 1) / 2) * spread;
+    const floorValue = resident.vertical_position ?? resident.floor ?? 0;
+    const baseYPixel = baseYCoordinate(baseY, floorValue, floorHeight) - floorHeight * 0.25;
+    ctx.drawImage(sprite, baseXPixel - width / 2, baseYPixel - height, width, height);
+  });
+}
+
+function drawOutsideResidents(layout, residents) {
+  if (!residents.length) return;
+  const { baseY, offsetX } = layout;
+  const groundY = baseY + 40;
+  residents.forEach((resident, index) => {
+    const sprite = chooseResidentSprite(resident, roomLookup.get(resident.location));
+    if (!sprite) return;
+    const scale = 0.6;
+    const width = sprite.width * scale;
+    const height = sprite.height * scale;
+    const jitter = (index - (residents.length - 1) / 2) * 60;
+    const baseXPixel = offsetX - 90 + jitter;
+    ctx.drawImage(sprite, baseXPixel - width / 2, groundY - height, width, height);
+  });
+}
+
+function drawHallwayResidents(layout, residents, progress) {
+  if (!residents.length) return;
+  const { baseY, buildingWidth, offsetX, floorHeight } = layout;
+  residents.forEach((resident) => {
+    const sprite = chooseResidentSprite(resident, roomLookup.get(resident.location));
+    if (!sprite) return;
+    const scale = (floorHeight * 0.65) / sprite.height;
+    const width = sprite.width * scale;
+    const height = sprite.height * scale;
+    const prev = previousMap.get(resident.resident_id) || resident;
+    const interpX = previousState ? lerp(prev.x, resident.x, progress) : resident.x;
+    const interpFloor = previousState
+      ? lerp(prev.vertical_position, resident.vertical_position, progress)
+      : resident.vertical_position;
+    const baseXPixel = offsetX + buildingWidth * interpX;
+    const baseYPixel = baseYCoordinate(baseY, interpFloor, floorHeight) - floorHeight * 0.2;
+    ctx.drawImage(sprite, baseXPixel - width / 2, baseYPixel - height, width, height);
   });
 }
 
@@ -487,20 +757,6 @@ function drawElevator(layout, elevator) {
   const carY = baseY - elevator.position * floorHeight - carHeight * 0.5;
   const carSprite = elevator.doors_open ? carSprites.door_open : carSprites.idle;
   ctx.drawImage(carSprite, shaftX + 2, carY, shaftWidth - 4, carHeight);
-}
-
-function determineOccupancy() {
-  const occupied = new Map();
-  if (!currentState) return occupied;
-  currentState.residents.forEach((resident) => {
-    if (resident.location_type === "unit" || resident.location_type === "amenity") {
-      if (!currentState.sunlight.is_day && resident.activity === "sleep") {
-        return;
-      }
-      occupied.set(resident.location, true);
-    }
-  });
-  return occupied;
 }
 
 function chooseResidentSprite(resident, roomMeta) {
@@ -547,52 +803,11 @@ function chooseResidentSprite(resident, roomMeta) {
   return sequence("idle", IDLE_FRAME_MS) || sequence("walk");
 }
 
-function drawResidents(layout, rooms, progress) {
-  if (!currentState) return;
-  const { baseY: layoutBaseY, floorHeight, buildingWidth, offsetX } = layout;
-  const roomMap = new Map(rooms.map((room) => [room.label, room]));
-  currentState.residents.forEach((resident) => {
-    const prev = previousMap.get(resident.resident_id) || resident;
-    let interpX = previousState ? lerp(prev.x, resident.x, progress) : resident.x;
-    const interpFloor = previousState
-      ? lerp(prev.vertical_position, resident.vertical_position, progress)
-      : resident.vertical_position;
-
-    const roomMeta = roomLookup.get(resident.location);
-    const roomRect = roomMap.get(resident.location);
-    let baseX = offsetX + buildingWidth * interpX;
-    let drawBaseY = baseYCoordinate(layoutBaseY, interpFloor, floorHeight);
-
-    if (resident.status === "in_event" && roomMeta && roomRect) {
-      const rng = hashId(resident.resident_id);
-      baseX = roomRect.x + roomRect.width * (0.25 + 0.5 * rng);
-      drawBaseY = roomRect.y + roomRect.height - 6;
-    } else if (resident.status === "waiting_elevator") {
-      baseX = offsetX + buildingWidth * ELEVATOR_X;
-      drawBaseY -= floorHeight * 0.25;
-    } else if (resident.status === "in_elevator") {
-      baseX = offsetX + buildingWidth * ELEVATOR_X;
-      drawBaseY = baseYCoordinate(layoutBaseY, resident.vertical_position, floorHeight) - floorHeight * 0.1;
-    } else if (resident.location_type === "outside") {
-      const jitter = hashId(resident.resident_id) * 40;
-      baseX = offsetX - 70 + jitter;
-      drawBaseY = layoutBaseY + 30;
-    }
-
-    const sprite = chooseResidentSprite(resident, roomMeta);
-    if (!sprite) return;
-    const scale = Math.min(floorHeight * 0.7 / sprite.height, 1.2);
-    const width = sprite.width * scale;
-    const height = sprite.height * scale;
-    ctx.drawImage(sprite, baseX - width / 2, drawBaseY - height, width, height);
-  });
-}
-
 function baseYCoordinate(baseY, interpFloor, floorHeight) {
   return baseY - interpFloor * floorHeight - floorHeight * 0.2;
 }
 
-function drawLighting(layout, rooms, occupancy) {
+function drawLighting(layout, rooms, lightingTargets) {
   if (currentState.sunlight.is_day) return;
   const windows = spriteLibrary.getBuildingSprite("windows_night");
   const { floorHeight, towerHeight, baseY, buildingWidth, offsetX } = layout;
@@ -602,12 +817,15 @@ function drawLighting(layout, rooms, occupancy) {
   ctx.globalAlpha = 1;
 
   const roomMap = new Map(rooms.map((room) => [room.label, room]));
-  occupancy.forEach((_, label) => {
+  lightingTargets.forEach((label) => {
     const roomRect = roomMap.get(label);
     if (!roomRect) return;
-    const glow = spriteLibrary.getLightingSprite("window_glow");
+    const roomGlow = spriteLibrary.getLightingSprite("room_glow");
+    ctx.globalAlpha = 0.35;
+    ctx.drawImage(roomGlow, roomRect.x, roomRect.y, roomRect.width, roomRect.height);
     ctx.globalAlpha = 0.4;
-    ctx.drawImage(glow, roomRect.x, roomRect.y, roomRect.width, roomRect.height);
+    const windowGlow = spriteLibrary.getLightingSprite("window_glow");
+    ctx.drawImage(windowGlow, roomRect.x, roomRect.y, roomRect.width, roomRect.height);
     ctx.globalAlpha = 1;
   });
 }
@@ -624,16 +842,21 @@ function drawScene() {
     : 1;
 
   const layout = towerMetrics(width, height);
-  const occupancy = determineOccupancy();
   const rooms = computeRoomGeometry(layout);
+  const groups = groupResidentsByLocation(rooms);
+  const lightingTargets = computeLightingTargets(groups.roomResidents);
 
   ctx.clearRect(0, 0, width, height);
   drawSky(currentState.sunlight, width, height);
   drawTower(layout);
-  drawRooms(layout, rooms, occupancy);
+  drawRooms(layout, rooms, groups.roomResidents);
+  drawRoomOutlines(rooms);
   drawElevator(layout, currentState.elevator);
-  drawResidents(layout, rooms, progress);
-  drawLighting(layout, rooms, occupancy);
+  drawElevatorResidents(layout, groups.elevatorResidents);
+  drawWaitingResidents(layout, groups.waitingResidents);
+  drawHallwayResidents(layout, groups.hallwayResidents, progress);
+  drawOutsideResidents(layout, groups.outsideResidents);
+  drawLighting(layout, rooms, lightingTargets);
 }
 
 async function bootstrap() {
