@@ -300,12 +300,18 @@ function drawResidents(layout, progress) {
   const now = performance.now();
   currentState.residents.forEach((resident) => {
     const prev = previousMap.get(resident.resident_id) || resident;
-    const interpX = previousState ? lerp(prev.x, resident.x, progress) : resident.x;
+    let interpX = previousState ? lerp(prev.x, resident.x, progress) : resident.x;
     const interpY = previousState
       ? lerp(prev.vertical_position, resident.vertical_position, progress)
       : resident.vertical_position;
-    const pxBase = offsetX + buildingWidth * interpX;
-    let px = pxBase;
+    let px;
+    if (resident.status === "in_elevator") {
+      px = offsetX + buildingWidth * ELEVATOR_X;
+      interpX = ELEVATOR_X;
+    } else {
+      const pxBase = offsetX + buildingWidth * interpX;
+      px = pxBase;
+    }
     if (resident.location_type === "outside") {
       const jitter = hashId(resident.resident_id) * 40;
       px = offsetX - 60 + jitter;

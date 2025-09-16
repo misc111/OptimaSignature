@@ -25,6 +25,9 @@ The project models Optima Signature as a living building populated by AI-driven 
 - `app.js`: Polls the `/state` endpoint, interpolates resident movement, renders elevators, sun/moon cycle, and handles speed adjustments.
 - `styles.css`: Neon-inspired styling for the dashboard and overlays.
 
+### Testing
+- `tests/test_elevator_movement.py`: Behavioural specs that validate elevator boarding, vertical confinement, arrival states, and smooth motion profiles.
+
 ### Shared Utilities
 - `core/time_utils.py`: Helpers for converting between minutes, timestamps, and human-readable labels.
 

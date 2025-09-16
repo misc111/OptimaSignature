@@ -40,6 +40,15 @@ python server.py
 
 Then open `frontend/index.html` in your browser. The dashboard polls the `/state` endpoint and updates every second. (If you prefer to serve the static assets via Flask, point a simple static file server at the `frontend/` directory.)
 
+### Tests
+
+Install dev dependencies and run the movement tests with `pytest`:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
 ## Project Structure
 
 - `optima_sim/` – simulation package

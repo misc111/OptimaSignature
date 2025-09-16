@@ -95,7 +95,7 @@ class ElevatorSystem:
         min_floor: int,
         max_floor: int,
         capacity: int = 10,
-        speed_per_tick: float = 4.0,
+        speed_per_tick: float = 0.5,
     ) -> None:
         self.min_floor = min_floor
         self.max_floor = max_floor
@@ -111,8 +111,11 @@ class ElevatorSystem:
         self.door_timer: int = 0
 
     def request(self, resident_id: str, origin: int, destination: int, tick: int) -> ElevatorRequest:
-        if resident_id in self.pending or any(p.resident_id == resident_id for p in self.passengers):
-            return self.pending[resident_id]
+        existing = self.pending.get(resident_id)
+        if existing:
+            return existing
+        if any(p.resident_id == resident_id for p in self.passengers):
+            return ElevatorRequest(resident_id, origin, destination, 1 if destination > origin else -1, tick)
         direction = 1 if destination > origin else -1
         request = ElevatorRequest(resident_id, origin, destination, direction, tick)
         self.waiting[origin].append(request)
@@ -314,6 +317,7 @@ class Simulation:
                 runtime.floor = outcome.floor
                 runtime.x = ELEVATOR_X
                 runtime.target_x = ELEVATOR_X
+                runtime.elevator_request = None
                 if runtime.pending_event_label:
                     destination_floor = runtime.travel_destination_floor or runtime.floor
                     label = self._format_floor(destination_floor)
@@ -468,6 +472,10 @@ class Simulation:
             return
 
         runtime.destination = destination
+        if runtime.status == "in_elevator":
+            runtime.target_x = ELEVATOR_X
+            runtime.x = ELEVATOR_X
+            return
         dest_floor = destination.floor if destination.floor is not None else runtime.floor
         if dest_floor != runtime.floor:
             if runtime.elevator_request is None:
